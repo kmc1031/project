@@ -2,10 +2,13 @@ import datetime  # 시간 정보
 import webbrowser  # url open
 import time  # 시간 정보
 import customtkinter as ctk
+from PIL import Image
+
 
 from manage_crops import add_crop
 from manage_weather import get_weather
-from config import add_db
+from config import add_db, BG_IMG_PATH
+from audio_manager import play_audio
 
 crops = {}
 
@@ -15,10 +18,19 @@ ctk.set_default_color_theme("dark-blue")  # 테마 설정 (blue, dark-blue, gree
 root = ctk.CTk()
 root.geometry("800x600")
 root.title("정미숙 진로상담선생님")
+root.resizable(False, False)
+
 title = ctk.CTkLabel(root, text="garden.py", font=("Arial", 20))
 title.pack(pady=20)  # pady: 위아래 여백
 
+# back ground image
+image = Image.open(BG_IMG_PATH)
+background_image = ctk.CTkImage(image, size=(800, 600))
+bg_lbl = ctk.CTkLabel(root, text="", image=background_image)
+bg_lbl.place(x=0, y=0)
 
+
+@play_audio
 def on_click_0():
     url = "https://www.nongsaro.go.kr/portal/ps/psb/psbl/workScheduleLst.ps?menuId=PS00087"
     webbrowser.open(url)
@@ -28,47 +40,48 @@ button0 = ctk.CTkButton(root, text="0. 농사로 홈페이지 바로가기", com
 button0.pack(pady=10)
 
 
-def add_crop_and_close(name_entry, manager_entry, input_win):
+def add_crop_and_close(crop_list, manager_entry, input_win):
     global crops  # 전역 변수 사용
-    if not name_entry.get() or not manager_entry.get():
+    if not crop_list.get() or not manager_entry.get():
         print("작물 이름과 담당자를 모두 입력해야 합니다.")
         ctk.CTkMessageBox.show_error(
             "오류", "작물 이름과 담당자를 모두 입력해야 합니다."
         )
         return
-    # 작물 이름과 담당자 가져오기
-    global crops
-    from manage_crops import add_crop  # 모듈에서 함수 가져오기
 
-    if not isinstance(crops, dict):
-        crops = {}
     # 작물 이름과 담당자 입력
     # crops 딕셔너리에 추가
-    add_crop(crops, name_entry.get(), manager_entry.get())
-    # print(f"{name_entry.get()} 추가 완료! 담당자: {manager_entry.get()}")
+    add_crop(crops, crop_list.get(), manager_entry.get())
+    # print(f"{crop_list.get()} 추가 완료! 담당자: {manager_entry.get()}")
     # 입력 필드 초기화
-    name_entry.delete(0, ctk.END)
+    crop_list.set("작물 이름을 선택하세요.")
     manager_entry.delete(0, ctk.END)
-    print(f"{name_entry.get()} 추가 완료! 담당자: {manager_entry.get()}")
+    print(f"{crop_list.get()} 추가 완료! 담당자: {manager_entry.get()}")
 
     input_win.destroy()  # 입력 창 닫기
 
 
+@play_audio
 def on_click_1():
+    from config import crop_db
+
     input_win = ctk.CTkToplevel(root)
     input_win.attributes("-topmost", True)
     input_win.geometry("400x200")
     input_win.title("작물 추가")
-    label = ctk.CTkLabel(input_win, text="작물 이름과 담당자를 입력하세요")
+    label = ctk.CTkLabel(input_win, text="작물 이름과 담당자를 선택하세요")
     label.pack(pady=10)
-    name_entry = ctk.CTkEntry(input_win, placeholder_text="작물 이름")
-    name_entry.pack(pady=5)
+    crop_list_var = ctk.StringVar(value="작물 선택")
+    crop_list = ctk.CTkComboBox(
+        input_win, values=crop_db.keys(), variable=crop_list_var, state="readonly"
+    )
+    crop_list.pack(pady=5)
     manager_entry = ctk.CTkEntry(input_win, placeholder_text="담당자 이름")
     manager_entry.pack(pady=5)
     add_button = ctk.CTkButton(
         input_win,
         text="추가",
-        command=lambda: add_crop_and_close(name_entry, manager_entry, input_win),
+        command=lambda: add_crop_and_close(crop_list, manager_entry, input_win),
     )
     add_button.pack(pady=10)
 
@@ -107,6 +120,7 @@ def add_db_and_close(
     input_win.destroy()  # 입력 창 닫기
 
 
+@play_audio
 def on_click_2():
     input_win = ctk.CTkToplevel(root)
     input_win.attributes("-topmost", True)
@@ -148,6 +162,7 @@ button2 = ctk.CTkButton(root, text="2. DB 추가", command=on_click_2)
 button2.pack(pady=10)
 
 
+@play_audio
 def on_click_3():
     win = ctk.CTkToplevel(root)
     win.attributes("-topmost", True)
@@ -178,6 +193,7 @@ button3 = ctk.CTkButton(root, text="3. 현재 등록된 작물 보기", command=
 button3.pack(pady=10)
 
 
+@play_audio
 def on_click_4():
     win = ctk.CTkToplevel(root)
     win.attributes("-topmost", True)
@@ -214,6 +230,7 @@ def check_watering():
             crops[name]["급수일"] = today
 
 
+@play_audio
 def on_click_5():
     win = ctk.CTkToplevel(root)
     win.attributes("-topmost", True)
@@ -241,6 +258,7 @@ def on_click_6_yes(win_tmp):
     root.quit()  # tkinter GUI 종료
 
 
+@play_audio
 def on_click_6():
     win_tmp = ctk.CTkToplevel(root)
     win_tmp.attributes("-topmost", True)
@@ -263,65 +281,3 @@ button6.pack(pady=10)
 # -----------------------------
 
 root.mainloop()
-
-
-# -----------------------------
-# 프로그램 메뉴
-# -----------------------------
-
-
-def main():
-    # schedule.every().day.at("08:00").do(check_watering)
-
-    while True:
-        print("\n[텃밭 관리 프로그램]")
-        print("0. 농사로 작물 정보 바로가기")
-        print("1. 작물 추가")
-        print("2. DB 추가")
-        print("3. 현재 등록된 작물 보기")
-        print("4. 날씨 확인")
-        print("5. 수동 알림 체크")
-        print("6. 종료")
-
-        choice = input("선택하세요: ")
-
-        if choice == "0":
-            url = "https://www.nongsaro.go.kr/portal/ps/psb/psbl/workScheduleLst.ps?menuId=PS00087"
-            webbrowser.open(url)
-
-        elif choice == "1":  # 작물 현황에 작물 추가
-            name = input("작물 이름 입력: ")
-            manager = input("담당자 이름 입력: ")
-            add_crop(crops, name, manager)
-
-        elif choice == "2":  # crop, sowing, harvest, water_cycle 받아서 DB를 추가
-            name = input("작물 이름 입력: ")
-            sowing = input("파종 시기 입력: ")
-            harvest = input("수확일 입력:")
-            water_cycle = int(input("급수 주기: "))
-            add_db(name, sowing, harvest, water_cycle)
-
-        elif choice == "3":
-            for crop, info in crops.items():
-                print(
-                    f"{crop} - 담당자: {info['담당자']}, 파종: {info['파종일']}, 수확: {info['수확일']}"
-                )
-
-        elif choice == "4":
-            get_weather()
-
-        elif choice == "5":
-            check_watering()
-
-        elif choice == "6":
-            print("프로그램 종료.")
-            break
-
-        else:
-            print("잘못된 입력입니다.")
-
-        time.sleep(1)
-
-
-if __name__ == "__main__":
-    main()

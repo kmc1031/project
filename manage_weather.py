@@ -1,7 +1,8 @@
 import requests
-import datetime
-import time
-import json
+import urllib.parse
+from datetime import datetime, timedelta
+import xml.etree.ElementTree as ET
+
 from bisect import bisect_left
 from config import API_KEY, NX, NY, TIME_LIST
 
@@ -11,15 +12,73 @@ from config import API_KEY, NX, NY, TIME_LIST
 
 
 def get_weather():
-    date = datetime.today() - time.timedelta(hours=3)
-    base_date = date.strftime("%Y%m%d")  # 발표 일자
-    base_time = TIME_LIST[bisect_left(TIME_LIST, date.strftime("%H00"))]  # 발표 시간
-    url = f"http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst?serviceKey={API_KEY}&numOfRows=14&pageNo=72&dataType=json&base_date={base_date}&base_time={base_time}&nx={NX}&ny={NY}"
-    respons = requests.get(url)
-    if respons.status_code != 200:
-        print("날씨 정보를 불러오는 데 실패했습니다.")
-        return -1
-    data = json.loads(respons.text)
-    if data["response"]["header"]["resultCode"] != "00":
-        print("날씨 정보를 불러오는 데 실패했습니다.")
-        return -1
+    # 1) 사용자 설정
+    service_key = "SLnUCvSqwv%2FeT7pxQ2NFc2etMr8%2B7HLq1zXs6Djr1%2BXDUA%2F4YQvKK7C3nhGjIjOX0Vs42IoiIg%2FEQgHpcP371w%3D%3D"  # ← 여기에 서비스키 입력
+    nx, ny = 60, 127  # ← 여기에 조회할 지점 X, Y 격자좌표 입력
+
+    # 2) 서비스키 URL 인코딩 (guide 요구사항) :contentReference[oaicite:1]{index=1}
+    encoded_key = urllib.parse.quote_plus(service_key)
+
+    # 3) 최신 발표시각 계산
+    def get_latest_base(dt):
+        slots = [2, 5, 8, 11, 14, 17, 20, 23]
+        hour = dt.hour
+        candidates = [h for h in slots if h <= hour]
+        if not candidates:
+            base_date = (dt - timedelta(days=1)).strftime("%Y%m%d")
+            base_time = "2300"
+        else:
+            h = max(candidates)
+            base_date = dt.strftime("%Y%m%d")
+            base_time = f"{h:02d}00"
+        return base_date, base_time
+
+    now = datetime.now()  # Asia/Seoul 로컬타임
+    base_date, base_time = get_latest_base(now)
+
+    # 4) API 호출 (serviceKey는 이미 URL에 포함)
+    base_url = (
+        "http://apis.data.go.kr/1360000/"
+        "VilageFcstInfoService_2.0/getVilageFcst"
+        f"?serviceKey={encoded_key}"
+    )
+    params = {
+        "pageNo": "1",
+        "numOfRows": "1000",
+        "dataType": "JSON",  # JSON 요청
+        "base_date": base_date,
+        "base_time": base_time,
+        "nx": nx,
+        "ny": ny,
+    }
+
+    resp = requests.get(base_url, params=params)
+    resp.raise_for_status()
+
+    # 5) 응답 파싱: JSON 우선, 실패 시 XML
+    try:
+        result = resp.json()
+        items = result["response"]["body"]["items"]["item"]
+    except ValueError:
+        # JSON 디코드 실패하면 XML로 파싱
+        root = ET.fromstring(resp.text)
+        # <item> 요소들을 모두 모아서 dict 형태로 처리
+        items = []
+        for item_el in root.findall(".//item"):
+            it = {child.tag: child.text for child in item_el}
+            items.append(it)
+
+    # 6) ‘강수형태(PTY)’ 항목에서 비(0 이외) 수집
+    rain_times = []
+    for it in items:
+        if it.get("category") == "PTY" and it.get("fcstValue") not in (None, "0"):
+            dt_str = it["fcstDate"] + it["fcstTime"]
+            rain_times.append(datetime.strptime(dt_str, "%Y%m%d%H%M"))
+
+    # 7) 결과 출력
+    if not rain_times:
+        print("향후 일주일 내에 비 예보는 없습니다.")
+    else:
+        print("향후 일주일 내 비 예보 시점:")
+        for t in sorted(set(rain_times)):
+            print("  -", t.strftime("%Y-%m-%d %H:%M"))
