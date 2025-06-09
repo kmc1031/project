@@ -1,35 +1,37 @@
 import datetime  # 시간 정보
 import webbrowser  # url open
 import time  # 시간 정보
-import pickle  # DB, 작물 관리 정보 저장장
-import customtkinter as ctk
+import pickle  # DB, 작물 관리 정보 저장
+import customtkinter as ctk  # UI
 from CTkMessagebox import CTkMessagebox
-from PIL import Image
+from PIL import Image  # 사진 넣기
 
 from manage_crops import add_crop
 from manage_weather import get_weather
 from config import add_db, BG_IMG_PATH
 from audio_manager import play_audio
 
+##----여기부터 UI----##
 ctk.set_appearance_mode("Dark")  # 다크 모드 설정 (System, Light, Dark)
 ctk.set_default_color_theme("dark-blue")  # 테마 설정 (blue, dark-blue, green)
 
-root = ctk.CTk()
-root.geometry("800x600")
-root.title("정미숙 진로상담선생님")
-root.resizable(False, False)
+root = ctk.CTk()  # 창 호출, ctk 모듈의 CTk class
+root.geometry("800x600")  # 창 크기
+root.title("정미숙 진로상담선생님")  # 창 제목
+root.resizable(False, False)  # x축, y축 방향 창 크기 조절
 
-title = ctk.CTkLabel(root, text="garden.py", font=("Arial", 20))
+title = ctk.CTkLabel(root, text="garden.py", font=("Arial", 20))  # 상단 텍스트
 title.pack(pady=20)  # pady: 위아래 여백
 
-# back ground image
+# background image
 image = Image.open(BG_IMG_PATH)
 background_image = ctk.CTkImage(image, size=(800, 600))
 bg_lbl = ctk.CTkLabel(root, text="", image=background_image)
 bg_lbl.place(x=0, y=0)
 
 
-@play_audio
+# 버튼 누를 때 소리 남
+@play_audio  # audio_manager.py의 함수 호출받는 데코레이터: 오디오 재생+아래 함수 호출
 def on_click_0():
     url = "https://www.nongsaro.go.kr/portal/ps/psb/psbl/workScheduleLst.ps?menuId=PS00087"
     webbrowser.open(url)
@@ -61,7 +63,7 @@ def add_crop_and_close(crop_list, manager_entry, input_win):
 
 @play_audio
 def on_click_1():
-    with open("./../datas/db.pkl", "rb") as f:
+    with open("./datas/db.pkl", "rb") as f:
         crop_db = pickle.load(f)
 
     input_win = ctk.CTkToplevel(root)
@@ -90,7 +92,11 @@ button1.pack(pady=10)
 
 
 def add_db_and_close(
-    name_entry, sowing_entry, harvest_entry, water_cycle_entry, input_win
+    name_entry,
+    sowing_entry,
+    harvest_entry,
+    water_cycle_entry,
+    input_win,  # 띄우는 창창
 ):
     if (
         not name_entry.get()
@@ -98,17 +104,17 @@ def add_db_and_close(
         or not harvest_entry.get()
         or not water_cycle_entry.get()
     ):
-        print("모든 필드를 입력해야 합니다.")
+        print("모든 필드를 입력해야 합니다.")  # 모든 정보 작성했는지 확인
         CTkMessagebox(
             message="모든 필드를 입력해야합니다.", icon="warning", option_1="Ok"
         )
         return
 
     # 작물 정보 가져오기
-    name = name_entry.get()
-    sowing = sowing_entry.get()
-    harvest = harvest_entry.get()
-    water_cycle = int(water_cycle_entry.get())
+    name = name_entry.get()  # 작물 이름
+    sowing = sowing_entry.get()  # 파종일
+    harvest = harvest_entry.get()  # 수확일일
+    water_cycle = int(water_cycle_entry.get())  # 급수주기
     # DB에 추가
     add_db(name, sowing, harvest, water_cycle)
     # print(f"{name} 추가 완료! 파종: {sowing}, 수확: {harvest}, 급수 주기: {water_cycle}일")
@@ -184,7 +190,7 @@ def on_click_3():
         label_font=("Arial", 14),  # 레이블 폰트
         label_anchor="w",  # 레이블 앵커 위치
     )
-    with open("./../datas/crops.pkl", "rb") as f:
+    with open("./datas/crops.pkl", "rb") as f:
         crops = pickle.load(f)
     for crop, info in crops.items():
         crop_info = f"{crop} - 담당자: {info['담당자']}, 파종: {info['파종일']}, 수확: {info['수확일']}"
@@ -194,6 +200,10 @@ def on_click_3():
 
 button3 = ctk.CTkButton(root, text="3. 현재 등록된 작물 보기", command=on_click_3)
 button3.pack(pady=10)
+
+
+def refresh_weather():
+    pass
 
 
 @play_audio
@@ -209,10 +219,17 @@ def on_click_4():
     # 날씨 정보를 가져와서 출력
     # get_weather 함수는 날씨 정보를 문자열로 반환
     # 만약 오류가 발생하면 -1을 반환
-    weather_info = get_weather()
-    if weather_info != -1:
-        print("\n[현재 날씨 정보]")
-        print(weather_info)
+    refresh_button = ctk.CTkButton(
+        root, text="새로고침", command=lambda x: refresh_weather(label)
+    )
+    refresh_button.pack(pady=10)
+    weather_frame = ctk.CTkFrame(root)
+    weather_frames = [ctk.CTkFrame(weather_frame) for i in range(7)]
+    weather_label = [
+        [ctk.CTkLabel(weather_frames[i], text=f"{i + 1}후 비 예보")] for i in range(7)
+    ]
+    for i in range(7):
+        weather_label.
 
 
 button4 = ctk.CTkButton(root, text="4. 날씨 확인", command=on_click_4)
@@ -224,13 +241,15 @@ button4.pack(pady=10)
 # -----------------------------
 def check_watering():
     today = datetime.date.today()
-    with open("./../datas/crops.pkl", "rb") as f:
-        crops = pickle.load(f)
+    with open("./datas/crops.pkl", "rb") as f:
+        crops = pickle.load(f)  # crops 불러오기
     for name, info in crops.items():
-        last_watered = info["급수일"]
+        last_watered = info["급수일"]  # 작물별 급수일 확인
         delta = (today - last_watered).days
         if delta >= info["급수주기"]:
-            yield (f"[급수 알림] {name}에 물 줄 시간입니다! (담당자: {info['담당자']})")
+            yield (
+                f"[급수 알림] {name}에 물 줄 시간입니다! (담당자: {info['담당자']})"
+            )  # 급수주기 넘으면 물 주도록 알림림
             crops[name]["급수일"] = today
 
 

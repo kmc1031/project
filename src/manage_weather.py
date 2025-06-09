@@ -72,9 +72,4 @@ def get_weather():
             rain_times.append(datetime.strptime(dt_str, "%Y%m%d%H%M"))
 
     # 7) 결과 출력
-    if not rain_times:
-        print("향후 일주일 내에 비 예보는 없습니다.")
-    else:
-        print("향후 일주일 내 비 예보 시점:")
-        for t in sorted(set(rain_times)):
-            print("  -", t.strftime("%Y-%m-%d %H:%M"))
+    return rain_times
