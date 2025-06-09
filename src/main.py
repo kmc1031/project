@@ -10,6 +10,7 @@ from manage_crops import add_crop
 from manage_weather import get_weather
 from config import add_db, BG_IMG_PATH
 from audio_manager import play_audio
+from remove_crops import remove_crops
 
 ##----여기부터 UI----##
 ctk.set_appearance_mode("Dark")  # 다크 모드 설정 (System, Light, Dark)
@@ -313,20 +314,8 @@ button5 = ctk.CTkButton(root, text="5. 수동 알림 체크", command=on_click_5
 button5.pack(pady=10)
 
 
-def remove_crops(win, choice_combo):
-    if not choice_combo.get():
-        CTkMessagebox(message="작물을 선택하여 주십시오", icon="warning", option_1="Ok")
-    with open("./datas/crops.pkl", "rb") as f:
-        crops = pickle.load(f)
-    choice = choice_combo.get()
-    del crops[choice]
-    with open("./datas/crops.pkl", "wb") as f:
-        pickle.dump(crops, f)
-        f.truncate()
-    choice_combo.set("작물 선택택")
-    win.destroy()
-
-
+# ----------6. 작물 삭제----------
+@play_audio
 def on_click_6():
     with open("./datas/crops.pkl", "rb") as f:
         crops = pickle.load(f)
