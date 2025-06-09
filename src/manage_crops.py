@@ -4,10 +4,10 @@ import customtkinter as ctk
 
 
 def add_crop(name, manager):
-    with open("datas/db.pkl", "rb") as f:
+    with open("../datas/db.pkl", "rb") as f:
         crop_db = pickle.load(f)
 
-    with open("datas/crops.pkl", "rb") as f:
+    with open("../datas/crops.pkl", "rb") as f:
         crops = pickle.load(f)
 
     if name in crop_db:
@@ -22,8 +22,9 @@ def add_crop(name, manager):
             "급수일": datetime.date.today(),
         }
 
-        with open("datas/crops.pkl", "wb") as f:
+        with open("../datas/crops.pkl", "wb") as f:
             pickle.dump(crops, f)
+            f.truncate()
         print(f"{name} 추가 완료! 담당자: {manager}")
 
     else:

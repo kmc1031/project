@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 
 from bisect import bisect_left
-from config import API_KEY, NX, NY, TIME_LIST
+from config import API_KEY, NX, NY, TI3ME_LIST
 
 # -----------------------------
 # 간단 날씨 조회 (기상청 API 사용 예정)
@@ -12,12 +12,8 @@ from config import API_KEY, NX, NY, TIME_LIST
 
 
 def get_weather():
-    # 1) 사용자 설정
-    service_key = "SLnUCvSqwv%2FeT7pxQ2NFc2etMr8%2B7HLq1zXs6Djr1%2BXDUA%2F4YQvKK7C3nhGjIjOX0Vs42IoiIg%2FEQgHpcP371w%3D%3D"  # ← 여기에 서비스키 입력
-    nx, ny = 60, 127  # ← 여기에 조회할 지점 X, Y 격자좌표 입력
-
     # 2) 서비스키 URL 인코딩 (guide 요구사항) :contentReference[oaicite:1]{index=1}
-    encoded_key = urllib.parse.quote_plus(service_key)
+    encoded_key = urllib.parse.quote_plus(API_KEY)
 
     # 3) 최신 발표시각 계산
     def get_latest_base(dt):
@@ -48,8 +44,8 @@ def get_weather():
         "dataType": "JSON",  # JSON 요청
         "base_date": base_date,
         "base_time": base_time,
-        "nx": nx,
-        "ny": ny,
+        "NX": NX,
+        "NY": NY,
     }
 
     resp = requests.get(base_url, params=params)

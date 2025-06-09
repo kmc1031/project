@@ -37,12 +37,13 @@ BG_IMG_PATH = "images/background.jpg"
 
 
 def add_db(crop, sowing, harvest, water_cycle):
-    with open("db.pkl", "rb") as f:
+    with open("./../datas/db.pkl", "rb") as f:
         crop_db = pickle.load(f)
 
     crop_db[crop] = {"파종": sowing, "수확": harvest, "급수주기": water_cycle}
-    with open("db.pkl", "wb") as f:
+    with open("./../datas/db.pkl", "wb") as f:
         pickle.dump(crop_db, f)
+        f.truncate()
     CTkMessagebox(
         message="작물이 성공적으로 추가되었습니다!", icon="check", option_1="Ok"
     )
