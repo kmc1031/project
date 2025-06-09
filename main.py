@@ -1,7 +1,9 @@
 import datetime  # 시간 정보
 import webbrowser  # url open
 import time  # 시간 정보
+import pickle
 import customtkinter as ctk
+from CTkMessagebox import CTkMessagebox
 from PIL import Image
 
 
@@ -10,7 +12,6 @@ from manage_weather import get_weather
 from config import add_db, BG_IMG_PATH
 from audio_manager import play_audio
 
-crops = {}
 
 ctk.set_appearance_mode("Dark")  # 다크 모드 설정 (System, Light, Dark)
 ctk.set_default_color_theme("dark-blue")  # 테마 설정 (blue, dark-blue, green)
@@ -41,17 +42,16 @@ button0.pack(pady=10)
 
 
 def add_crop_and_close(crop_list, manager_entry, input_win):
-    global crops  # 전역 변수 사용
     if not crop_list.get() or not manager_entry.get():
         print("작물 이름과 담당자를 모두 입력해야 합니다.")
-        ctk.CTkMessageBox.show_error(
-            "오류", "작물 이름과 담당자를 모두 입력해야 합니다."
+        CTkMessagebox(
+            message="모든 필드를 입력해야합니다.", icon="warning", option_1="Ok"
         )
         return
 
     # 작물 이름과 담당자 입력
     # crops 딕셔너리에 추가
-    add_crop(crops, crop_list.get(), manager_entry.get())
+    add_crop(crop_list.get(), manager_entry.get())
     # print(f"{crop_list.get()} 추가 완료! 담당자: {manager_entry.get()}")
     # 입력 필드 초기화
     crop_list.set("작물 이름을 선택하세요.")
@@ -63,7 +63,8 @@ def add_crop_and_close(crop_list, manager_entry, input_win):
 
 @play_audio
 def on_click_1():
-    from config import crop_db
+    with open("datas/db.pkl", "rb") as f:
+        crop_db = pickle.load(f)
 
     input_win = ctk.CTkToplevel(root)
     input_win.attributes("-topmost", True)
@@ -100,7 +101,9 @@ def add_db_and_close(
         or not water_cycle_entry.get()
     ):
         print("모든 필드를 입력해야 합니다.")
-        ctk.CTkMessageBox.show_error("오류", "모든 필드를 입력해야 합니다.")
+        CTkMessagebox(
+            message="모든 필드를 입력해야합니다.", icon="warning", option_1="Ok"
+        )
         return
 
     # 작물 정보 가져오기
@@ -183,6 +186,8 @@ def on_click_3():
         label_font=("Arial", 14),  # 레이블 폰트
         label_anchor="w",  # 레이블 앵커 위치
     )
+    with open("datas/crops.pkl", "rb") as f:
+        crops = pickle.load(f)
     for crop, info in crops.items():
         crop_info = f"{crop} - 담당자: {info['담당자']}, 파종: {info['파종일']}, 수확: {info['수확일']}"
         crop_label = ctk.CTkLabel(crops_list, text=crop_info, anchor="w")
@@ -202,7 +207,6 @@ def on_click_4():
     label = ctk.CTkLabel(win, text="현재 날씨 정보")
     label.pack(pady=10)
     # 날씨 정보 가져오기
-    from manage_weather import get_weather  # 모듈에서 함수 가져오기
 
     # 날씨 정보를 가져와서 출력
     # get_weather 함수는 날씨 정보를 문자열로 반환
@@ -222,6 +226,8 @@ button4.pack(pady=10)
 # -----------------------------
 def check_watering():
     today = datetime.date.today()
+    with open("datas/crops.pkl", "rb") as f:
+        crops = pickle.load(f)
     for name, info in crops.items():
         last_watered = info["급수일"]
         delta = (today - last_watered).days
