@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 
 from bisect import bisect_left
-from config import API_KEY, NX, NY, TI3ME_LIST
+from config import API_KEY, NX, NY, TIME_LIST
 
 # -----------------------------
 # 간단 날씨 조회 (기상청 API 사용 예정)

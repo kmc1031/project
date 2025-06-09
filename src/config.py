@@ -10,8 +10,8 @@ NY = 127
 TIME_LIST = ["0200", "0500", "0800", "1100", "1400", "1700", "2000", "2300"]
 
 
-AUDIO_PATH = "audios/button.mp3"
-BG_IMG_PATH = "images/background.jpg"
+AUDIO_PATH = "./../audios/button.mp3"
+BG_IMG_PATH = "./../images/background.jpg"
 # -----------------------------
 # 기본 작물 데이터베이스
 # -----------------------------
