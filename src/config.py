@@ -7,11 +7,10 @@ from CTkMessagebox import CTkMessagebox
 API_KEY = "SLnUCvSqwv%2FeT7pxQ2NFc2etMr8%2B7HLq1zXs6Djr1%2BXDUA%2F4YQvKK7C3nhGjIjOX0Vs42IoiIg%2FEQgHpcP371w%3D%3D"
 NX = 60
 NY = 127
-TIME_LIST = ["0200", "0500", "0800", "1100", "1400", "1700", "2000", "2300"]
 
 
-AUDIO_PATH = "./../audios/button.mp3"
-BG_IMG_PATH = "./../images/background.jpg"
+AUDIO_PATH = "./audios/button.mp3"
+BG_IMG_PATH = "./images/background.jpg"
 # -----------------------------
 # 기본 작물 데이터베이스
 # -----------------------------
@@ -37,11 +36,11 @@ BG_IMG_PATH = "./../images/background.jpg"
 
 
 def add_db(crop, sowing, harvest, water_cycle):
-    with open("./../datas/db.pkl", "rb") as f:
+    with open("./datas/db.pkl", "rb") as f:
         crop_db = pickle.load(f)
 
     crop_db[crop] = {"파종": sowing, "수확": harvest, "급수주기": water_cycle}
-    with open("./../datas/db.pkl", "wb") as f:
+    with open("./datas/db.pkl", "wb") as f:
         pickle.dump(crop_db, f)
         f.truncate()
     CTkMessagebox(
