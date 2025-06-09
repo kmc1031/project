@@ -16,8 +16,11 @@ from remove_crops import remove_crops
 ctk.set_appearance_mode("Dark")  # 다크 모드 설정 (System, Light, Dark)
 ctk.set_default_color_theme("dark-blue")  # 테마 설정 (blue, dark-blue, green)
 
+root_w = 800
+root_h = 600
+
 root = ctk.CTk()  # 창 호출, ctk 모듈의 CTk class
-root.geometry("800x600")  # 창 크기
+root.geometry(f"{root_w}x{root_h}")  # 창 크기
 root.title("정미숙 진로상담선생님")  # 창 제목
 root.resizable(False, False)  # x축, y축 방향 창 크기 조절
 
@@ -26,7 +29,7 @@ title.pack(pady=20)  # pady: 위아래 여백
 
 # background image
 image = Image.open(BG_IMG_PATH)
-background_image = ctk.CTkImage(image, size=(800, 600))
+background_image = ctk.CTkImage(image, size=(root_w, root_h))
 bg_lbl = ctk.CTkLabel(root, text="", image=background_image)
 bg_lbl.place(x=0, y=0)
 
@@ -132,7 +135,7 @@ def add_db_and_close(
 def on_click_2():
     input_win = ctk.CTkToplevel(root)
     input_win.attributes("-topmost", True)
-    input_win.geometry("400x200")
+    input_win.geometry("400x600")
     input_win.title("DB 추가")
     label = ctk.CTkLabel(input_win, text="작물 정보 입력")
     label.pack(pady=10)
